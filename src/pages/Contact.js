@@ -76,7 +76,6 @@ const Contact = () => {
       <>  
       <Container> 
          <h1>My Contact List</h1>
-         <h4>Show List</h4>
 
         {/* Render table start from here */}             
         { isLoading ? <LoadingSpinner /> : renderUserListTable }
