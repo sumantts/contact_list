@@ -1,6 +1,9 @@
-import { Button, Form, Container, Table } from 'react-bootstrap';
+import { Container, Table } from 'react-bootstrap';
 import { useState, useEffect, useRef } from 'react'
 import LoadingSpinner from './LoadingSpinner';
+import { BsBoxArrowInUpRight, BsFillTrashFill, BsAlignMiddle } from 'react-icons/bs';
+import DeleteConfirmation from './DeleteConfirmation'
+import { useNavigate } from 'react-router-dom';
 
 
 const Contact = () => {
@@ -8,10 +11,17 @@ const Contact = () => {
   const dataFetchedRef = useRef(false);
   const [usersList, setUsersList ] = useState([]);
   const [ isLoading, setIsLoading ] = useState(false);
+  const [ displayConfirmationModal, setDisplayConfirmationModal ] = useState(false)
+  const [ hideConfirmationModal, setHideConfirmationModal ] = useState(false)
+  const [type, setType] = useState(null)
+  const [id, setId] = useState(null)
+  const [deleteMessage, setDeleteMessage] = useState(null);
+  const navigate = useNavigate();
 
   const fetchData = async () => {
     setCounter( (oldValue) => oldValue+1)
     setIsLoading(true)
+
     const requestOptions = {
       method: 'POST',
       body: JSON.stringify({
@@ -25,7 +35,7 @@ const Contact = () => {
 
     if(content.status == true){
         const users = content.users;  
-        console.log(JSON.stringify(users));  
+        //console.log(JSON.stringify(users));  
         if(users.length > 0){
           setUsersList(users)
           setIsLoading(false)
@@ -43,6 +53,49 @@ const Contact = () => {
     dataFetchedRef.current = true;
     fetchData()
   }, [])
+
+  const deleteMyContact = (id, type) => {
+    console.log(JSON.stringify(type))
+    setType(type);
+    setId(id);
+    setDeleteMessage('Are you suret to delete this contact? ' + type)
+    setHideConfirmationModal(false)
+    setDisplayConfirmationModal(true);
+  }
+
+  // Hide the modal
+  const handelHideConfirmationModal = () => {
+    setDisplayConfirmationModal(false);
+  };
+
+  const submitDelete = async (type, id) => {
+    handelHideConfirmationModal()
+    setIsLoading(true)
+    console.log(type, id)
+    
+    const requestOptions = {
+      method: 'POST',
+      body: JSON.stringify({
+        id: id
+      })
+    }
+    const functionFetch = `https://plugins-development.ordering.co/roy/contact_list/delete_user.php`
+    const response = await fetch(functionFetch, requestOptions)
+    const content = await response.json()
+
+    if(content.status == true){
+      fetchData()
+      setIsLoading(false)
+    }else{
+      setIsLoading(false)
+      alert('Error happened on API')
+    }     
+  }//end fun
+
+  const editContact = (id) => {
+    console.log('Edit user: '+id)
+    navigate("/");
+  }//end fun
 
   //start rendering
   const renderUserListTable = (    
@@ -63,7 +116,15 @@ const Contact = () => {
         <td>{ data.user_name }</td>
         <td>{ data.user_email }</td>
         <td>{ data.user_password }</td>
-        <td>Edit -|- Delete</td>
+        <td>
+          <BsBoxArrowInUpRight 
+          onClick={() => editContact(data.id)}
+          /> 
+
+          <BsFillTrashFill 
+          onClick={() => deleteMyContact(data.id, data.user_name)}
+          />
+        </td>
       </tr>
     ))
     }
@@ -80,6 +141,15 @@ const Contact = () => {
         {/* Render table start from here */}             
         { isLoading ? <LoadingSpinner /> : renderUserListTable }
         {/* Render table start from here */}
+
+        <DeleteConfirmation 
+        showModal={displayConfirmationModal} 
+        confirmModal={submitDelete} 
+        hideModal={handelHideConfirmationModal} 
+        type={type} 
+        id={id} 
+        message={deleteMessage}  
+        />
       </Container>
       </>
     )
