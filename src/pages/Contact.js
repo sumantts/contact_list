@@ -4,6 +4,7 @@ import LoadingSpinner from './LoadingSpinner';
 import { BsBoxArrowInUpRight, BsFillTrashFill, BsAlignMiddle } from 'react-icons/bs';
 import DeleteConfirmation from './DeleteConfirmation'
 import { useNavigate } from 'react-router-dom';
+import EditModal from './EditModal'
 
 
 const Contact = () => {
@@ -17,7 +18,14 @@ const Contact = () => {
   const [id, setId] = useState(null)
   const [deleteMessage, setDeleteMessage] = useState(null);
   const navigate = useNavigate();
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editData, setEditData] = useState()
 
+  const [contactId, setContactId] = useState('');
+  const [tempName, setTempName] = useState('');
+  const [tempEmail, setTempEmail] = useState('');
+  const [tempPassword, setTempPassword] = useState('');
+  
   const fetchData = async () => {
     setCounter( (oldValue) => oldValue+1)
     setIsLoading(true)
@@ -92,10 +100,27 @@ const Contact = () => {
     }     
   }//end fun
 
-  const editContact = (id) => {
-    console.log('Edit user: '+id)
-    navigate("/");
+  const editContact = (data) => {
+    console.log('Edit user: '+ JSON.stringify(data))
+    setContactId(data.id)
+    setTempName(data.user_name)
+    setTempEmail(data.user_email)
+    setTempPassword(data.user_password)
+
+    setEditData(data)
+    setShowEditModal(true)
   }//end fun
+
+  const handelHideEditModal = () => {
+    setShowEditModal(false)
+  }
+
+  const updateContactInfo = () => {
+    fetchData()
+    handelHideEditModal()
+    console.log('close modal')
+  }
+
 
   //start rendering
   const renderUserListTable = (    
@@ -118,7 +143,7 @@ const Contact = () => {
         <td>{ data.user_password }</td>
         <td>
           <BsBoxArrowInUpRight 
-          onClick={() => editContact(data.id)}
+          onClick={() => editContact(data)}
           /> 
 
           <BsFillTrashFill 
@@ -149,6 +174,17 @@ const Contact = () => {
         type={type} 
         id={id} 
         message={deleteMessage}  
+        />
+
+        <EditModal 
+        showModal={showEditModal}
+        hideModal={handelHideEditModal}
+        confirmModal={updateContactInfo}
+        editData={editData}
+        contactId={contactId}
+        tempName={tempName}
+        tempEmail={tempEmail}
+        tempPassword={tempPassword}
         />
       </Container>
       </>
